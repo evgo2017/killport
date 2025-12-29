@@ -4,8 +4,8 @@
 
 Kill Port aims to help developers quickly terminate processes occupying specific ports. Provides multi-language support, VSCode Web, and Desktop applications.
 
-- Build process didn't exit? Port already in use?
-- Always forget the command line to kill a port!
+    - Build process didn't exit? Port already in use?
+    - Always forget the command line to kill a port!
 
 ## 🚀 KillPort Desktop Guide
 
