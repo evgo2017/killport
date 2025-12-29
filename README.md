@@ -11,7 +11,7 @@ Kill Port aims to help developers quickly terminate processes occupying specific
 
 See [killport-desktop](./killport-desktop/README.md) for details.
 
-![Desktop Steps](https://raw.githubusercontent.com/evgo2017/killport/main/killport-desktop/assets/steps.png)
+![Desktop Steps](https://raw.githubusercontent.com/evgo2017/killport/main/killport-desktop/Assets/steps.png)
 
 ## 🚀 VSCode Extension Guide
 

@@ -11,7 +11,7 @@ Kill Port 旨在帮助开发者快速终止占用特定端口的进程。提供�
 
 具体查看 [killport-desktop](./killport-desktop/README.md)。
 
-![Desktop Steps](https://raw.githubusercontent.com/evgo2017/killport/main/killport-desktop/assets/steps.png)
+![Desktop Steps](https://raw.githubusercontent.com/evgo2017/killport/main/killport-desktop/Aassets/steps.png)
 
 ## 🚀 VSCode 扩展使用指南
 
