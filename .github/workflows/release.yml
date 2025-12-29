@@ -1,0 +1,115 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-desktop:
+    strategy:
+      matrix:
+        include:
+          # windows
+          - os: windows-latest
+            rid: win-x64
+          - os: windows-latest
+            rid: win-x86  
+          - os: windows-latest
+            rid: win-arm
+          - os: windows-latest
+            rid: win-arm64
+          # osx
+          - os: macos-latest
+            rid: osx-x64
+          - os: macos-latest
+            rid: osx-arm64
+          # linux
+          - os: ubuntu-latest
+            rid: linux-x64
+          - os: ubuntu-latest
+            rid: linux-arm
+          - os: ubuntu-latest
+            rid: linux-arm64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Publish Desktop
+        run: |
+          cd killport-desktop
+          dotnet publish -c Release -r ${{ matrix.rid }} -o publish
+
+      - name: Upload Desktop Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: KillPort-Desktop-${{ matrix.rid }}
+          path: killport-desktop/publish/**
+
+  build-extension:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Dependencies
+        working-directory: killport-vscode
+        run: npm ci
+
+      - name: Package Extension
+        working-directory: killport-vscode
+        run: npm run package
+
+      - name: Upload Extension Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension
+          path: killport-vscode/bin/*.vsix
+
+  release:
+    needs: [build-desktop, build-extension]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Prepare Assets
+        run: |
+          mkdir release-assets
+          cd artifacts
+          
+          # Handle VS Code Extension
+          if [ -d "extension" ]; then
+            cp extension/*.vsix ../release-assets/
+          fi
+
+          # Handle Desktop Builds
+          for dir in KillPort-Desktop-*; do
+            if [ -d "$dir" ]; then
+              # Extract RID from directory name (KillPort-Desktop-win-x64 -> win-x64)
+              rid=${dir#KillPort-Desktop-}
+              zip -r "../release-assets/KillPort-Desktop-$rid-${{ github.ref_name }}.zip" "$dir"
+            fi
+          done
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release-assets/*
+          draft: false
+          prerelease: false
