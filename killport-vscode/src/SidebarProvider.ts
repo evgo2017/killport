@@ -33,7 +33,11 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
             "btnCancel": "Cancel",
             "btnConfirm": "Yes, Kill",
             "processLabel": "Process: ",
-            "pidLabel": "PID: "
+            "pidLabel": "PID: ",
+            "catWebApp": "Frontend",
+            "catBackend": "Backend",
+            "catDatabase": "Database",
+            "catSystem": "System"
         },
         "zh": {
             "searchPlaceholder": "输入端口号 (例如 8080)",
@@ -56,7 +60,11 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
             "btnCancel": "取消",
             "btnConfirm": "确认关闭",
             "processLabel": "进程: ",
-            "pidLabel": "PID: "
+            "pidLabel": "PID: ",
+            "catWebApp": "前端",
+            "catBackend": "后端",
+            "catDatabase": "数据库",
+            "catSystem": "系统"
         }
     };
 
@@ -83,6 +91,12 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                 case "kill": {
                     const pid = data.value;
                     this.killProcess(pid);
+                    break;
+                }
+                case "clear": {
+                    this._lastSearchedPort = "";
+                    this._view?.webview.postMessage({ type: "clearProcesses" });
+                    this._view?.webview.postMessage({ type: "status", key: "statusReady" });
                     break;
                 }
             }
@@ -200,6 +214,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                     input { 
                         flex: 1; 
                         padding: 8px; 
+                        padding-right: 24px;
                         background: var(--vscode-input-background); 
                         color: var(--vscode-input-foreground); 
                         border: 1px solid var(--vscode-input-border);
@@ -315,12 +330,164 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                         border-radius: 4px;
                     }
                     .confirm-details div { margin-bottom: 5px; }
+                    
+                    /* Custom Suggestions List */
+                    /* Search Box Layout */
+                    .search-box {
+                        display: flex;
+                        gap: 8px;
+                        margin-bottom: 5px;
+                        align-items: center; /* Ensure vertical alignment */
+                    }
+                    .suggestions-wrapper {
+                        position: relative;
+                        flex: 1; /* Input takes remaining space */
+                        min-width: 0; /* Handle overflow in flex items */
+                        display: flex; /* Allow input to fill wrapper */
+                    }
+                    input {
+                        flex: 1; /* Input fills wrapper */
+                        padding: 8px;
+                        padding-right: 30px; /* Space for clear button */
+                        box-sizing: border-box; /* Include padding in width */
+                        width: 100%;
+                    }
+                    button#searchBtn {
+                        padding: 8px 16px;
+                        white-space: nowrap; /* Prevent button text wrapping */
+                        flex-shrink: 0; /* Button stays fixed width based on content */
+                    }
+                    
+                    /* Clear Button Inside Input */
+                    .clear-btn {
+                        position: absolute;
+                        right: 8px; /* Position inside input */
+                        top: 50%;
+                        transform: translateY(-50%);
+                        background: none;
+                        border: none;
+                        color: var(--vscode-descriptionForeground);
+                        cursor: pointer;
+                        font-size: 16px;
+                        padding: 0;
+                        display: none;
+                        line-height: 1;
+                        z-index: 10; /* Ensure above input */
+                    }
+                    .clear-btn.visible {
+                        display: block;
+                    }
+
+                    /* Custom Suggestions List */
+                    .suggestions-list {
+                        position: absolute;
+                        top: 100%;
+                        left: 0;
+                        right: 0;
+                        background: var(--vscode-dropdown-background);
+                        border: 1px solid var(--vscode-dropdown-border);
+                        z-index: 1000;
+                        max-height: 300px;
+                        overflow-y: auto;
+                        display: none;
+                        margin: 0;
+                        padding: 0;
+                        list-style: none;
+                        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                    } 
+                    .suggestions-list.visible {
+                        display: block;
+                    }
+                    .suggestion-category {
+                        display: flex;
+                        padding: 8px 10px;
+                        border-bottom: 1px solid var(--vscode-dropdown-border);
+                    }
+                    .suggestion-category:last-child {
+                        border-bottom: none;
+                    }
+                    .category-name {
+                        width: 60px;
+                        font-weight: bold;
+                        font-size: 12px;
+                        color: var(--vscode-descriptionForeground);
+                        margin-right: 10px; /* Space between name and ports */
+                        display: flex;
+                        align-items: center;
+                        flex-shrink: 0;
+                    }
+                    .category-ports {
+                        flex: 1;
+                        display: flex;
+                        flex-wrap: wrap;
+                        gap: 6px;
+                    }
+                    .port-tag {
+                        background: var(--vscode-badge-background);
+                        color: var(--vscode-badge-foreground);
+                        padding: 3px 8px;
+                        border-radius: 3px;
+                        cursor: pointer;
+                        font-size: 12px;
+                        border: 1px solid transparent;
+                    }
+                    .port-tag:hover {
+                        border-color: var(--vscode-focusBorder);
+                        background: var(--vscode-list-hoverBackground);
+                    }
+
+                    .suggestions-wrapper { position: relative; flex: 1; }
                 </style>
 			</head>
 			<body>
                 <div class="container">
                     <div class="search-box">
-                        <input type="text" id="portInput" placeholder="Enter Port Number (e.g. 8080)" />
+                        <div class="suggestions-wrapper">
+                            <input type="text" id="portInput" placeholder="Enter Port Number (e.g. 8080)" autocomplete="off" />
+                            <span id="clearBtn" class="clear-btn" title="Clear">✕</span>
+                            <div class="suggestions-list" id="suggestionsList">
+                                <!-- WebApp -->
+                                <div class="suggestion-category">
+                                    <div class="category-name" data-i18n="catWebApp">WebApp</div>
+                                    <div class="category-ports">
+                                        <span class="port-tag" data-value="3000" title="React/Next.js/Nuxt.js">3000</span>
+                                        <span class="port-tag" data-value="4200" title="Angular">4200</span>
+                                        <span class="port-tag" data-value="5173" title="Vite(Vue3/Svelte)">5173</span>
+                                        <span class="port-tag" data-value="8080" title="Vue CLI">8080</span>
+                                    </div>
+                                </div>
+                                <!-- Backend -->
+                                <div class="suggestion-category">
+                                    <div class="category-name" data-i18n="catBackend">Backend</div>
+                                    <div class="category-ports">
+                                        <span class="port-tag" data-value="3000" title="Node">3000</span>
+                                        <span class="port-tag" data-value="5000" title="ASP.NET/Flask">5000</span>
+                                        <span class="port-tag" data-value="8000" title="Django/FastAPI/Laravel">8000</span>
+                                        <span class="port-tag" data-value="8080" title="Spring/Tomcat">8080</span>
+                                    </div>
+                                </div>
+                                <!-- Database -->
+                                <div class="suggestion-category">
+                                    <div class="category-name" data-i18n="catDatabase">Database</div>
+                                    <div class="category-ports">
+                                        <span class="port-tag" data-value="3306" title="MySQL">3306</span>
+                                        <span class="port-tag" data-value="5432" title="PostgreSQL">5432</span>
+                                        <span class="port-tag" data-value="6379" title="Redis">6379</span>
+                                        <span class="port-tag" data-value="27017" title="MongoDB">27017</span>
+                                    </div>
+                                </div>
+                                <!-- System -->
+                                <div class="suggestion-category">
+                                    <div class="category-name" data-i18n="catSystem">System</div>
+                                    <div class="category-ports">
+                                        <span class="port-tag" data-value="80" title="HTTP">80</span>
+                                        <span class="port-tag" data-value="443" title="HTTPS">443</span>
+                                        <span class="port-tag" data-value="21" title="FTP">21</span>
+                                        <span class="port-tag" data-value="22" title="SSH">22</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <button id="searchBtn">Search</button>
                     </div>
 
@@ -369,6 +536,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
                     // Elements
                     const portInput = document.getElementById('portInput');
+                    const clearBtn = document.getElementById('clearBtn');
                     const searchBtn = document.getElementById('searchBtn');
                     const tableBody = document.getElementById('processTableBody');
                     const statusBar = document.getElementById('statusBar');
@@ -441,8 +609,50 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                             const value = portInput.value;
                             if(value) {
                                 vscode.postMessage({ type: 'search', value: value });
+                                suggestionsList.classList.remove('visible'); // Hide on enter
                             }
                          }
+                    });
+
+                    // Custom Dropdown Logic
+                    const suggestionsList = document.getElementById('suggestionsList');
+
+                    portInput.addEventListener('focus', () => {
+                        suggestionsList.classList.add('visible');
+                    });
+
+                    // Hide delayed to allow click event to register
+                    portInput.addEventListener('blur', () => {
+                        setTimeout(() => {
+                            suggestionsList.classList.remove('visible');
+                        }, 200);
+                    });
+
+                    suggestionsList.querySelectorAll('.port-tag').forEach(tag => {
+                        tag.addEventListener('click', () => {
+                            const val = tag.getAttribute('data-value');
+                            portInput.value = val;
+                            suggestionsList.classList.remove('visible');
+                            updateClearBtn();
+                            vscode.postMessage({ type: 'search', value: val });
+                        });
+                    });
+
+                    // Clear toggle
+                    function updateClearBtn() {
+                        if (portInput.value) clearBtn.classList.add('visible');
+                        else clearBtn.classList.remove('visible');
+                    }
+                    portInput.addEventListener('input', () => {
+                        updateClearBtn();
+                        suggestionsList.classList.add('visible');
+                    });
+                    
+                    clearBtn.addEventListener('click', () => {
+                        portInput.value = '';
+                        updateClearBtn();
+                        portInput.focus();
+                        vscode.postMessage({ type: 'clear' });
                     });
 
                     // Confirmation Logic

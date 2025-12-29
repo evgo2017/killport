@@ -189,4 +189,16 @@
   <data name="PidLabel" xml:space="preserve">
     <value>PID: </value>
   </data>
+  <data name="Category_WebApp" xml:space="preserve">
+    <value>Frontend</value>
+  </data>
+  <data name="Category_Backend" xml:space="preserve">
+    <value>Backend</value>
+  </data>
+  <data name="Category_Database" xml:space="preserve">
+    <value>Database</value>
+  </data>
+  <data name="Category_System" xml:space="preserve">
+    <value>System</value>
+  </data>
 </root>

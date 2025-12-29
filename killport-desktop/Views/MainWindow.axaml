@@ -3,6 +3,8 @@
         xmlns:vm="using:KillPort.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:services="using:KillPort.Services"
+        xmlns:converters="using:KillPort.Converters"
         mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="450"
         x:Class="KillPort.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
@@ -14,22 +16,103 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
+    <Window.Resources>
+        <converters:LocalizationConverter x:Key="LocalizationConverter"/>
+    </Window.Resources>
+
     <!-- Main Layout -->
     <Panel>
     <Grid RowDefinitions="Auto, *, Auto" Margin="20">
         
         <!-- Top: Search Section -->
         <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,20">
-            <TextBox Grid.Column="0" 
-                     Text="{Binding SearchPort}" 
-                     Watermark="{Binding Localization[SearchWatermark]}"
-                     FontSize="16"
-                     Margin="0,0,10,0">
-                <TextBox.KeyBindings>
-                    <KeyBinding Gesture="Enter" Command="{Binding SearchCommand}" />
-                </TextBox.KeyBindings>
-            </TextBox>
+            <Grid Grid.Column="0" Margin="0,0,10,0">
+                <TextBox Name="PortSearchBox"
+                         Text="{Binding SearchPort}"
+                         Watermark="{Binding Localization[SearchWatermark]}"
+                         FontSize="16"
+                         HorizontalAlignment="Stretch"
+                         GotFocus="SearchBox_GotFocus"
+                         Tapped="SearchBox_Tapped"
+                         KeyUp="SearchBox_KeyUp">
+                    <TextBox.InnerRightContent>
+                        <StackPanel Orientation="Horizontal">
+                            <Button Command="{Binding ClearCommand}"
+                                    IsVisible="{Binding HasSearchText}"
+                                    Content="✕"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Padding="5"
+                                    Cursor="Hand"
+                                    Margin="0,0,2,0"/>
+                            <ToggleButton IsChecked="{Binding IsDropDownOpen, Mode=TwoWay}"
+                                          Background="Transparent"
+                                          BorderThickness="0"
+                                          Padding="5"
+                                          Cursor="Hand">
+                                <TextBlock Text="▼" FontSize="10" Foreground="#888" VerticalAlignment="Center"/>
+                            </ToggleButton>
+                        </StackPanel>
+                    </TextBox.InnerRightContent>
+                    <TextBox.KeyBindings>
+                         <KeyBinding Gesture="Enter" Command="{Binding SearchCommand}" />
+                    </TextBox.KeyBindings>
+                </TextBox>
+                
+                <Popup IsOpen="{Binding IsDropDownOpen, Mode=TwoWay}"
+                       PlacementTarget="{Binding ElementName=PortSearchBox}"
+                       Placement="Bottom"
+                       IsLightDismissEnabled="True"
+                       OverlayInputPassThroughElement="{Binding ElementName=SearchButton}"
+                       MaxHeight="400">
+                    <Border Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                            BorderThickness="1"
+                            CornerRadius="4"
+                            Padding="5"
+                            Width="{Binding Bounds.Width, ElementName=PortSearchBox}">
+                        <ScrollViewer MaxHeight="300">
+                            <ItemsControl ItemsSource="{Binding PortCategories}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid ColumnDefinitions="80, *" Margin="0,5">
+                                            <TextBlock Text="{Binding Name, Converter={StaticResource LocalizationConverter}}" 
+                                                       VerticalAlignment="Center" 
+                                                       FontWeight="Bold" 
+                                                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                                       Margin="5,0,10,0"/>
+                                            <ItemsControl Grid.Column="1" ItemsSource="{Binding Ports}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <WrapPanel Orientation="Horizontal" />
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Button Content="{Binding Number}" 
+                                                                Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).SelectPortCommand}"
+                                                                CommandParameter="{Binding Number}"
+                                                                ToolTip.Tip="{Binding Description}"
+                                                                Margin="2" 
+                                                                Padding="8,4"
+                                                                Background="Transparent"
+                                                                BorderThickness="1"
+                                                                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                                                                Cursor="Hand"/>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
+                </Popup>
+            </Grid>
+            <!-- Old Clear Button Removed -->
             <Button Grid.Column="1" 
+                    x:Name="SearchButton"
                     Command="{Binding SearchCommand}"
                     Content="{Binding Localization[SearchButton]}"
                     FontSize="16"
@@ -48,7 +131,23 @@
                       AutoGenerateColumns="False"
                       IsReadOnly="True"
                       GridLinesVisibility="All"
-                      BorderThickness="0">
+                      BorderThickness="0"
+                      SelectionMode="Single">
+                <DataGrid.Styles>
+                     <Style Selector="DataGridRow:selected /template/ Rectangle#BackgroundRectangle">
+                         <Setter Property="IsVisible" Value="False"/>
+                     </Style>
+                     <Style Selector="DataGridRow:selected">
+                         <Setter Property="Background" Value="Transparent" />
+                         <Setter Property="Foreground" Value="{Binding $parent[DataGrid].Foreground}" />
+                     </Style>
+                     <Style Selector="DataGridCell:selected /template/ Rectangle#BackgroundRectangle">
+                        <Setter Property="IsVisible" Value="False"/>
+                     </Style>
+                     <Style Selector="DataGridCell:selected">
+                         <Setter Property="Background" Value="Transparent" />
+                     </Style>
+                </DataGrid.Styles>
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="{Binding ((vm:MainWindowViewModel)DataContext).Localization[PortHeader], RelativeSource={RelativeSource AncestorType=Window}}" 
                                         Binding="{Binding Port}" 
