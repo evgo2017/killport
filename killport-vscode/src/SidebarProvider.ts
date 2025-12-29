@@ -10,6 +10,56 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
     private _lastSearchedPort: string = "";
 
+    // Localization Dictionary
+    private _translations: any = {
+        "en": {
+            "searchPlaceholder": "Enter Port Number (e.g. 8080)",
+            "searchBtn": "Search",
+            "headerPid": "PID",
+            "headerName": "Name",
+            "headerProto": "Proto",
+            "headerAction": "Action",
+            "statusReady": "Ready",
+            "statusSearching": "Searching for port",
+            "statusFound": "Found {0} processes.",
+            "statusNone": "No processes found.",
+            "statusInvalid": "Invalid port number.",
+            "statusError": "Error: {0}",
+            "statusKilling": "Killing process {0}...",
+            "statusKilled": "Killed process {0}.",
+            "killBtn": "Kill",
+            "confirmTitle": "Kill Process?",
+            "confirmMsg": "Are you sure you want to kill this process?",
+            "btnCancel": "Cancel",
+            "btnConfirm": "Yes, Kill",
+            "processLabel": "Process: ",
+            "pidLabel": "PID: "
+        },
+        "zh": {
+            "searchPlaceholder": "输入端口号 (例如 8080)",
+            "searchBtn": "搜索",
+            "headerPid": "PID",
+            "headerName": "进程名",
+            "headerProto": "协议",
+            "headerAction": "操作",
+            "statusReady": "就绪",
+            "statusSearching": "正在搜索端口",
+            "statusFound": "找到 {0} 个进程。",
+            "statusNone": "未找到进程。",
+            "statusInvalid": "无效的端口号。",
+            "statusError": "错误: {0}",
+            "statusKilling": "正在结束进程 {0}...",
+            "statusKilled": "已结束进程 {0}。",
+            "killBtn": "关闭进程",
+            "confirmTitle": "确认结束进程",
+            "confirmMsg": "确定要结束这个进程吗？",
+            "btnCancel": "取消",
+            "btnConfirm": "确认关闭",
+            "processLabel": "进程: ",
+            "pidLabel": "PID: "
+        }
+    };
+
     constructor(private readonly _extensionUri: vscode.Uri) { }
 
     public resolveWebviewView(webviewView: vscode.WebviewView) {
@@ -41,11 +91,11 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
     private async searchProcesses(port: string) {
         if (!port || isNaN(parseInt(port))) {
-            this._view?.webview.postMessage({ type: "status", value: "Invalid port number." });
+            this._view?.webview.postMessage({ type: "status", key: "statusInvalid" });
             return;
         }
 
-        this._view?.webview.postMessage({ type: "status", value: `Searching for port ${port}...` });
+        this._view?.webview.postMessage({ type: "status", key: "statusSearching", args: [port] });
         this._view?.webview.postMessage({ type: "clearProcesses" });
 
         try {
@@ -53,85 +103,65 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
             const processes = [];
 
             if (isWindows) {
-                // Windows-specific logic using netstat
-                // netstat -ano | findstr :<PORT>
                 try {
                     const { stdout } = await exec(`netstat -ano | findstr :${port}`);
                     const lines = stdout.split('\n').filter(line => line.trim() !== '');
 
                     for (const line of lines) {
                         const parts = line.trim().split(/\s+/);
-                        // TCP    0.0.0.0:8080           0.0.0.0:0              LISTENING       1234
                         if (parts.length >= 5) {
                             const protocol = parts[0];
                             const localAddress = parts[1];
                             const pid = parts[parts.length - 1];
 
-                            // Check if it actually matches the port (exact match on :port end)
                             if (localAddress.endsWith(`:${port}`)) {
                                 let processName = "Unknown";
                                 try {
                                     const { stdout: taskOut } = await exec(`tasklist /FI "PID eq ${pid}" /FO CSV /NH`);
-                                    // "Image Name","PID"
-                                    // "python.exe","1234",...
                                     const taskParts = taskOut.trim().split(',');
                                     if (taskParts.length > 0) {
                                         processName = taskParts[0].replace(/"/g, '');
                                     }
-                                } catch (e) {
-                                    // Ignore tasklist error
-                                }
+                                } catch (e) { }
 
                                 processes.push({ port, pid, processName, protocol });
                             }
                         }
                     }
-                } catch (e) {
-                    // findstr returns error if not found
-                }
+                } catch (e) { }
             } else {
-                // Unix (Linux/Mac) logic using lsof
-                // lsof -i :<PORT>
                 try {
                     const { stdout } = await exec(`lsof -i :${port}`);
                     const lines = stdout.split('\n').filter(line => line.trim() !== '');
-                    // COMMAND   PID USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
-                    // node    12345 user   20u  IPv4 123456      0t0  TCP *:8080 (LISTEN)
-
-                    // Skip header
                     for (let i = 1; i < lines.length; i++) {
                         const parts = lines[i].trim().split(/\s+/);
                         if (parts.length >= 2) {
                             const processName = parts[0];
                             const pid = parts[1];
-                            const protocol = parts[4] || "TCP/UDP"; // Rough guess or parsing
-
+                            const protocol = parts[4] || "TCP/UDP";
                             processes.push({ port, pid, processName, protocol });
                         }
                     }
-                } catch (e) {
-                    // lsof returns error if not found
-                }
+                } catch (e) { }
             }
 
-            // Remove duplicates based on PID
             const uniqueProcesses = processes.filter((v, i, a) => a.findIndex(t => t.pid === v.pid) === i);
 
             if (uniqueProcesses.length > 0) {
                 this._view?.webview.postMessage({ type: "processes", value: uniqueProcesses });
-                this._view?.webview.postMessage({ type: "status", value: `Found ${uniqueProcesses.length} processes.` });
+                this._view?.webview.postMessage({ type: "status", key: "statusFound", args: [uniqueProcesses.length.toString()] });
             } else {
-                this._view?.webview.postMessage({ type: "status", value: "No processes found." });
+                this._view?.webview.postMessage({ type: "status", key: "statusNone" });
             }
 
         } catch (error: any) {
-            this._view?.webview.postMessage({ type: "status", value: `Error: ${error.message}` });
+            this._view?.webview.postMessage({ type: "status", key: "statusError", args: [error.message] });
         }
     }
 
     private async killProcess(pid: string) {
         if (!pid) return;
-        this._view?.webview.postMessage({ type: "status", value: `Killing process ${pid}...` });
+        this._view?.webview.postMessage({ type: "status", key: "statusKilling", args: [pid] });
         try {
             const isWindows = process.platform === 'win32';
             if (isWindows) {
@@ -140,24 +170,23 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                 await exec(`kill -9 ${pid}`);
             }
 
-            this._view?.webview.postMessage({ type: "status", value: `Killed process ${pid}.` });
+            this._view?.webview.postMessage({ type: "status", key: "statusKilled", args: [pid] });
 
-            // Refresh list if we have a port
             if (this._lastSearchedPort) {
-                // Short delay to allow process to fully terminate and OS to update socket state
                 setTimeout(() => {
                     this.searchProcesses(this._lastSearchedPort);
                 }, 1000);
             }
 
         } catch (error: any) {
-            this._view?.webview.postMessage({ type: "status", value: `Error: ${error.message}` });
+            this._view?.webview.postMessage({ type: "status", key: "statusError", args: [error.message] });
         }
     }
 
     private _getHtmlForWebview(webview: vscode.Webview) {
         const styleResetUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "reset.css"));
         const styleVSCodeUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "vscode.css"));
+        const translationsStr = JSON.stringify(this._translations);
 
         return `<!DOCTYPE html>
 			<html lang="en">
@@ -201,7 +230,31 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                         padding: 4px 8px;
                     }
                     .kill-btn:hover { background: #E60000; }
-                    .status-bar { font-size: 12px; color: var(--vscode-descriptionForeground); margin-top: 5px; }
+                    .status-bar { 
+                        font-size: 12px; 
+                        color: var(--vscode-descriptionForeground); 
+                        margin-top: 5px; 
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                    }
+
+                    /* Language Toggle */
+                    .lang-toggle {
+                        cursor: pointer;
+                        font-size: 11px;
+                        border: 1px solid var(--vscode-input-border);
+                        padding: 5px 8px;
+                        border-radius: 3px;
+                        background: var(--vscode-dropdown-background);
+                        color: var(--vscode-dropdown-foreground);
+                        min-width: 60px;
+                        text-align: center;
+                    }
+                    .lang-toggle:hover {
+                        background: var(--vscode-list-hoverBackground);
+                        color: var(--vscode-list-hoverForeground);
+                    }
 
                     /* Confirmation Overlay */
                     .overlay {
@@ -253,6 +306,15 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                     .btn-cancel:hover {
                          background: var(--vscode-button-secondaryHoverBackground);
                     }
+                    .confirm-details {
+                        text-align: left;
+                        margin-bottom: 15px;
+                        font-size: 13px;
+                        background: var(--vscode-textBlockQuote-background);
+                        padding: 10px;
+                        border-radius: 4px;
+                    }
+                    .confirm-details div { margin-bottom: 5px; }
                 </style>
 			</head>
 			<body>
@@ -266,10 +328,10 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                         <table>
                             <thead>
                                 <tr>
-                                    <th>PID</th>
-                                    <th>Name</th>
-                                    <th>Proto</th>
-                                    <th>Action</th>
+                                    <th data-i18n="headerPid">PID</th>
+                                    <th data-i18n="headerName">Name</th>
+                                    <th data-i18n="headerProto">Proto</th>
+                                    <th data-i18n="headerAction">Action</th>
                                 </tr>
                             </thead>
                             <tbody id="processTableBody">
@@ -278,16 +340,23 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                         </table>
                     </div>
 
-                    <div class="status-bar" id="statusBar">Ready</div>
+                    <div class="status-bar">
+                        <span id="statusBar" data-i18n="statusReady">Ready</span>
+                        <button class="lang-toggle" id="langToggle">English</button>
+                    </div>
                     
                     <!-- Confirmation Modal -->
                     <div class="overlay" id="confirmOverlay">
                         <div class="confirm-box">
-                            <div class="confirm-title">Kill Process?</div>
-                            <div class="confirm-msg" id="confirmMsg">Are you sure you want to kill this process?</div>
+                            <div class="confirm-title" data-i18n="confirmTitle">Kill Process?</div>
+                            <div class="confirm-msg" id="confirmMsg" data-i18n="confirmMsg">Are you sure you want to kill this process?</div>
+                            <div class="confirm-details">
+                                <div><span data-i18n="processLabel">Process: </span><span id="confirmProcName" style="font-weight:bold"></span></div>
+                                <div><span data-i18n="pidLabel">PID: </span><span id="confirmProcId" style="color:var(--vscode-descriptionForeground)"></span></div>
+                            </div>
                             <div class="confirm-actions">
-                                <button class="btn-cancel" id="btnCancel">Cancel</button>
-                                <button class="kill-btn" id="btnConfirmKill">Yes, Kill</button>
+                                <button class="btn-cancel" id="btnCancel" data-i18n="btnCancel">Cancel</button>
+                                <button class="kill-btn" id="btnConfirmKill" data-i18n="btnConfirm">Yes, Kill</button>
                             </div>
                         </div>
                     </div>
@@ -295,18 +364,70 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
 				<script>
                     const vscode = acquireVsCodeApi();
+                    const translations = ${translationsStr};
+                    let currentLang = 'en';
+
+                    // Elements
                     const portInput = document.getElementById('portInput');
                     const searchBtn = document.getElementById('searchBtn');
                     const tableBody = document.getElementById('processTableBody');
                     const statusBar = document.getElementById('statusBar');
+                    const langToggle = document.getElementById('langToggle');
                     
                     // Overlay elements
                     const confirmOverlay = document.getElementById('confirmOverlay');
                     const confirmMsg = document.getElementById('confirmMsg');
+                    const confirmProcName = document.getElementById('confirmProcName');
+                    const confirmProcId = document.getElementById('confirmProcId');
                     const btnCancel = document.getElementById('btnCancel');
                     const btnConfirmKill = document.getElementById('btnConfirmKill');
 
                     let processToKill = null;
+
+                    // I18n Helper
+                    function t(key, args = []) {
+                        let text = translations[currentLang][key] || key;
+                        args.forEach((arg, i) => {
+                            text = text.replace('{' + i + '}', arg);
+                        });
+                        return text;
+                    }
+
+                    function updateUI() {
+                        // Static elements
+                        document.querySelectorAll('[data-i18n]').forEach(el => {
+                            const key = el.getAttribute('data-i18n');
+                            el.innerText = t(key);
+                        });
+                        
+                        // Input placeholder
+                        portInput.placeholder = t('searchPlaceholder');
+                        searchBtn.innerText = t('searchBtn');
+
+                        // Language toggle text
+                        langToggle.textContent = currentLang === 'en' ? 'English' : '中文';
+                        
+                        // Table headers (handled by data-i18n above)
+                        
+                        // Status bar if it has a key stored
+                        const statusKey = statusBar.getAttribute('data-key');
+                        if (statusKey) {
+                            const args = JSON.parse(statusBar.getAttribute('data-args') || '[]');
+                            statusBar.innerText = t(statusKey, args);
+                        }
+                    }
+
+                    function setLanguage(lang) {
+                        currentLang = lang;
+                        updateUI();
+                    }
+
+                    // Language Toggle Event
+                    langToggle.addEventListener('click', () => {
+                        const newLang = currentLang === 'en' ? 'zh' : 'en';
+                        setLanguage(newLang);
+                    });
+
 
                     searchBtn.addEventListener('click', () => {
                         const value = portInput.value;
@@ -325,9 +446,11 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                     });
 
                     // Confirmation Logic
-                    function showConfirm(pid) {
+                    function showConfirm(pid, name) {
                         processToKill = pid;
-                        confirmMsg.innerText = \`Are you sure you want to kill PID \${pid}?\`;
+                        confirmMsg.innerText = t('confirmMsg');
+                        confirmProcName.innerText = name || 'Unknown';
+                        confirmProcId.innerText = pid;
                         confirmOverlay.classList.add('visible');
                     }
 
@@ -349,7 +472,14 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                         const message = event.data;
                         switch (message.type) {
                             case 'status':
-                                statusBar.innerText = message.value;
+                                if (message.key) {
+                                    statusBar.setAttribute('data-key', message.key);
+                                    statusBar.setAttribute('data-args', JSON.stringify(message.args || []));
+                                    statusBar.innerText = t(message.key, message.args || []);
+                                } else {
+                                    // Fallback for legacy plain text messages if any
+                                    statusBar.innerText = message.value;
+                                }
                                 break;
                             case 'clearProcesses':
                                 tableBody.innerHTML = '';
@@ -361,18 +491,20 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                                         <td>\${p.pid}</td>
                                         <td>\${p.processName}</td>
                                         <td>\${p.protocol}</td>
-                                        <td><button class="kill-btn">Kill</button></td>
+                                        <td><button class="kill-btn" data-i18n="killBtn">\${t('killBtn')}</button></td>
                                     \`;
-                                    // Binding click event properly
                                     const btn = tr.querySelector('.kill-btn');
                                     btn.onclick = () => {
-                                        showConfirm(p.pid);
+                                        showConfirm(p.pid, p.processName);
                                     };
                                     tableBody.appendChild(tr);
                                 });
                                 break;
                         }
                     });
+                    
+                    // Initial UI update
+                    updateUI();
                 </script>
 			</body>
 			</html>`;

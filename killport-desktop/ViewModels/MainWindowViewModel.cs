@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -10,18 +11,53 @@ namespace KillPort.ViewModels;
 public partial class MainWindowViewModel : ViewModelBase
 {
     private readonly IPortService _portService;
+    public LocalizationManager Localization => LocalizationManager.Instance;
 
     [ObservableProperty]
     private string _searchPort = "";
 
     [ObservableProperty]
-    private string _statusMessage = "Ready";
+    private string _statusMessage;
+
+    // Store state for dynamic localization
+    private string _currentStatusKey = "ReadyStatus";
+    private object[] _currentStatusArgs = System.Array.Empty<object>();
 
     public ObservableCollection<ProcessItem> ProcessList { get; } = new();
 
     public MainWindowViewModel()
     {
         _portService = new PortService();
+        SetStatus("ReadyStatus");
+    }
+
+    private void SetStatus(string key, params object[] args)
+    {
+        _currentStatusKey = key;
+        _currentStatusArgs = args;
+        RefreshStatusMessage();
+    }
+
+    private void RefreshStatusMessage()
+    {
+        var format = Localization.Get(_currentStatusKey);
+        if (string.IsNullOrEmpty(format)) format = _currentStatusKey; // Fallback
+        
+        try
+        {
+            StatusMessage = string.Format(format, _currentStatusArgs);
+        }
+        catch
+        {
+            StatusMessage = format;
+        }
+    }
+
+    [RelayCommand]
+    private void ToggleLanguage()
+    {
+        Localization.ToggleLanguage();
+        RefreshStatusMessage();
     }
 
     [RelayCommand]
@@ -29,18 +65,22 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         if (int.TryParse(SearchPort, out int port))
         {
-            StatusMessage = $"Searching for port {port}...";
+            SetStatus("SearchingMessage", port);
             ProcessList.Clear();
             var items = await _portService.GetProcessesByPortAsync(port);
             foreach (var item in items)
             {
                 ProcessList.Add(item);
             }
-            StatusMessage = items.Count > 0 ? $"Found {items.Count} processes." : "No processes found.";
+            
+            if (items.Count > 0)
+                 SetStatus("FoundProcessesFormat", items.Count); 
+            else
+                 SetStatus("NoProcessFound");
         }
         else
         {
-            StatusMessage = "Invalid port number.";
+             SetStatus("InvalidPort");
         }
     }
 
@@ -74,7 +114,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try 
         {
-            StatusMessage = $"Killing process {item.ProcessId}...";
+             SetStatus("KillingProcessFormat", item.ProcessId);
             
             // Optimistically update UI or fully refresh.
             // Full refresh ensures state is correct.
@@ -83,12 +123,12 @@ public partial class MainWindowViewModel : ViewModelBase
             // Short delay to allow OS to clean up
             await Task.Delay(500);
             
-            StatusMessage = $"Killed process {item.ProcessId}.";
+             SetStatus("KilledProcessFormat", item.ProcessId);
             await Search();
         }
         catch (System.Exception ex)
         {
-            StatusMessage = $"Error: {ex.Message}";
+             SetStatus("ErrorMessage", ex.Message);
         }
         finally
         {
