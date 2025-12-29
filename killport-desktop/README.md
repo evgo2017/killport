@@ -18,7 +18,7 @@ Kill Port Desktop is a standalone application that helps you manage and terminat
 3.  **Filter/Search**: Enter a port number to quickly find specific processes.
 4.  **Terminate Process**: Click the Kill button for the corresponding port entry.
 
-![Desktop Steps](https://raw.githubusercontent.com/evgo2017/killport/main/killport-desktop/Aassets/steps.png)
+![Desktop Steps](https://raw.githubusercontent.com/evgo2017/killport/main/killport-desktop/Assets/steps.png)
 
 ## Download
 

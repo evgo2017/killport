@@ -18,7 +18,7 @@ Kill Port 桌面端是一个独立的应用程序，都可以帮助您管理和�
 3.  **筛选/搜索**: 可以输入端口号快速查找。
 4.  **终止进程**: 点击对应端口条目的终止按钮 (Kill)。
 
-![Desktop Steps](https://raw.githubusercontent.com/evgo2017/killport/main/killport-desktop/assets/steps.png)
+![Desktop Steps](https://raw.githubusercontent.com/evgo2017/killport/main/killport-desktop/Assets/steps.png)
 
 ## 下载地址
 
