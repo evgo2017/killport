@@ -4,6 +4,7 @@ node_modules/**
 src/**
 scripts/**
 bin/**
+!assets/**
 tsconfig.json
 !out/**
 !resources/**
