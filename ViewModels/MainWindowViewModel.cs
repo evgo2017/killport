@@ -44,11 +44,34 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    [ObservableProperty]
+    private bool _isConfirmationVisible;
+
+    [ObservableProperty]
+    private ProcessItem? _processToKill;
+
     [RelayCommand]
-    private async Task KillProcess(ProcessItem item)
+    private void RequestKillProcess(ProcessItem item)
     {
-        if (item == null) return;
+        ProcessToKill = item;
+        IsConfirmationVisible = true;
+    }
+
+    [RelayCommand]
+    private void CancelKill()
+    {
+        IsConfirmationVisible = false;
+        ProcessToKill = null;
+    }
+
+    [RelayCommand]
+    private async Task ConfirmKill()
+    {
+        if (ProcessToKill == null) return;
         
+        var item = ProcessToKill;
+        IsConfirmationVisible = false; // Close dialog immediately
+
         try 
         {
             StatusMessage = $"Killing process {item.ProcessId}...";
@@ -66,6 +89,10 @@ public partial class MainWindowViewModel : ViewModelBase
         catch (System.Exception ex)
         {
             StatusMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            ProcessToKill = null;
         }
     }
 }

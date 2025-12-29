@@ -1,0 +1,10 @@
+.vscode/**
+.git/**
+node_modules/**
+src/**
+scripts/**
+bin/**
+tsconfig.json
+!out/**
+!resources/**
+!media/**

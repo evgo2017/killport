@@ -1,0 +1,51 @@
+{
+  "name": "killport-vscode",
+  "displayName": "Kill Port",
+  "description": "Kill processes by port number",
+  "publisher": "evgo2017",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/evgo2017/killport-vscode.git"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "killport-activitybar",
+          "title": "KillPort",
+          "icon": "./resources/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "killport-activitybar": [
+        {
+          "type": "webview",
+          "id": "killport-sidebar",
+          "name": "KillPort"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "npm run compile && node scripts/package-version.js"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.80.0",
+    "@vscode/vsce": "^3.7.1",
+    "typescript": "^5.0.0"
+  }
+}
