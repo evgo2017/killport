@@ -3,7 +3,8 @@
   "displayName": "Kill Port",
   "description": "Kill processes by port number",
   "publisher": "evgo2017",
-  "version": "0.1.18",
+  "version": "0.1.21",
+  "icon": "resources/icon.png",
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -22,7 +23,7 @@
         {
           "id": "killport-activitybar",
           "title": "Kill Port",
-          "icon": "./resources/icon.svg"
+          "icon": "./resources/activitybar.svg"
         }
       ]
     },
