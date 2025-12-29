@@ -1,6 +1,6 @@
 # Kill Port VSCode 扩展
 
-[中文文档](README.zh-CN.md) | [English](README.md)
+[中文文档](./README.zh-CN.md) | [English](./README.md)
 
 Kill Port 是一个便捷的 VS Code 扩展，旨在帮助开发者快速终止占用特定端口的进程。多语言、VSCode 版本和桌面端应用。
 
@@ -18,7 +18,7 @@ Kill Port 是一个便捷的 VS Code 扩展，旨在帮助开发者快速终止�
 
 ## 📝 更新日志
 
-详见 [CHANGELOG.zh-CN.md](CHANGELOG.zh-CN.md)。
+详见 [CHANGELOG.zh-CN.md](./CHANGELOG.zh-CN.md)。
 
 ---
 

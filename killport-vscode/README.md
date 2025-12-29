@@ -1,6 +1,6 @@
 # Kill Port VSCode Extension
 
-[中文文档](README.zh-CN.md) | [English](README.md)
+[中文文档](./README.zh-CN.md) | [English](./README.md)
 
 Kill Port is a convenient VS Code extension designed to help developers quickly terminate processes occupying specific ports. Supports multiple languages, VSCode versions, and provides a desktop application.
 
