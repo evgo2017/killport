@@ -202,6 +202,57 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                     }
                     .kill-btn:hover { background: #E60000; }
                     .status-bar { font-size: 12px; color: var(--vscode-descriptionForeground); margin-top: 5px; }
+
+                    /* Confirmation Overlay */
+                    .overlay {
+                        position: fixed;
+                        top: 0; left: 0; right: 0; bottom: 0;
+                        background: rgba(0, 0, 0, 0.5);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        z-index: 100;
+                        visibility: hidden;
+                        opacity: 0;
+                        transition: opacity 0.2s;
+                    }
+                    .overlay.visible {
+                        visibility: visible;
+                        opacity: 1;
+                    }
+                    .confirm-box {
+                        background: var(--vscode-editor-background);
+                        border: 1px solid var(--vscode-panel-border);
+                        padding: 15px;
+                        border-radius: 5px;
+                        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+                        width: 80%;
+                        max-width: 300px;
+                        text-align: center;
+                        top: 200px;
+                        position: absolute;
+                    }
+                    .confirm-title {
+                        font-weight: bold;
+                        margin-bottom: 10px;
+                        font-size: 14px;
+                    }
+                    .confirm-msg {
+                        margin-bottom: 15px;
+                        font-size: 13px;
+                    }
+                    .confirm-actions {
+                        display: flex;
+                        justify-content: center;
+                        gap: 10px;
+                    }
+                    .btn-cancel {
+                        background: var(--vscode-button-secondaryBackground);
+                        color: var(--vscode-button-secondaryForeground);
+                    }
+                    .btn-cancel:hover {
+                         background: var(--vscode-button-secondaryHoverBackground);
+                    }
                 </style>
 			</head>
 			<body>
@@ -228,6 +279,18 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                     </div>
 
                     <div class="status-bar" id="statusBar">Ready</div>
+                    
+                    <!-- Confirmation Modal -->
+                    <div class="overlay" id="confirmOverlay">
+                        <div class="confirm-box">
+                            <div class="confirm-title">Kill Process?</div>
+                            <div class="confirm-msg" id="confirmMsg">Are you sure you want to kill this process?</div>
+                            <div class="confirm-actions">
+                                <button class="btn-cancel" id="btnCancel">Cancel</button>
+                                <button class="kill-btn" id="btnConfirmKill">Yes, Kill</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
 				<script>
@@ -236,6 +299,14 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                     const searchBtn = document.getElementById('searchBtn');
                     const tableBody = document.getElementById('processTableBody');
                     const statusBar = document.getElementById('statusBar');
+                    
+                    // Overlay elements
+                    const confirmOverlay = document.getElementById('confirmOverlay');
+                    const confirmMsg = document.getElementById('confirmMsg');
+                    const btnCancel = document.getElementById('btnCancel');
+                    const btnConfirmKill = document.getElementById('btnConfirmKill');
+
+                    let processToKill = null;
 
                     searchBtn.addEventListener('click', () => {
                         const value = portInput.value;
@@ -251,6 +322,27 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                                 vscode.postMessage({ type: 'search', value: value });
                             }
                          }
+                    });
+
+                    // Confirmation Logic
+                    function showConfirm(pid) {
+                        processToKill = pid;
+                        confirmMsg.innerText = \`Are you sure you want to kill PID \${pid}?\`;
+                        confirmOverlay.classList.add('visible');
+                    }
+
+                    function hideConfirm() {
+                        processToKill = null;
+                        confirmOverlay.classList.remove('visible');
+                    }
+
+                    btnCancel.addEventListener('click', hideConfirm);
+
+                    btnConfirmKill.addEventListener('click', () => {
+                        if (processToKill) {
+                            vscode.postMessage({ type: 'kill', value: processToKill });
+                            hideConfirm();
+                        }
                     });
 
                     window.addEventListener('message', event => {
@@ -269,12 +361,12 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                                         <td>\${p.pid}</td>
                                         <td>\${p.processName}</td>
                                         <td>\${p.protocol}</td>
-                                        <td><button class="kill-btn" onclick="killProcess('\${p.pid}')">Kill</button></td>
+                                        <td><button class="kill-btn">Kill</button></td>
                                     \`;
                                     // Binding click event properly
                                     const btn = tr.querySelector('.kill-btn');
                                     btn.onclick = () => {
-                                        vscode.postMessage({ type: 'kill', value: p.pid });
+                                        showConfirm(p.pid);
                                     };
                                     tableBody.appendChild(tr);
                                 });
