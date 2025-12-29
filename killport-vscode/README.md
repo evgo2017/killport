@@ -14,7 +14,7 @@ Kill Port is a convenient VS Code extension designed to help developers quickly 
 3.  Check Port: **Select or enter a port number in the input box**, and the corresponding process information will be displayed below.
 4.  Kill Process: Click the **Close Process** button next to the port and confirm to close.
 
-![steps](resources/steps.png)
+![steps](https://raw.githubusercontent.com/evgo2017/killport/main/killport-vscode/resources/steps.png)
 
 ## 📝 Release Notes
 

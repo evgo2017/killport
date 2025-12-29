@@ -14,7 +14,7 @@ Kill Port 是一个便捷的 VS Code 扩展，旨在帮助开发者快速终止�
 1.  查看端口: 在**输入框中选择或输入端口号**，下方会显示对应的进程信息。
 1.  杀死进程: 点击端口旁边的**关闭进程**按钮，确认关闭。
 
-![steps](resources/steps.png)
+![steps](https://raw.githubusercontent.com/evgo2017/killport/main/killport-vscode/resources/steps.png)
 
 ## 📝 更新日志
 
