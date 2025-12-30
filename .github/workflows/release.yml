@@ -14,9 +14,10 @@ jobs:
           - os: windows-latest
             rid: win-x64
           - os: windows-latest
-            rid: win-x86  
-          - os: windows-latest
-            rid: win-arm
+            rid: win-x86
+          # 不支持
+          # - os: windows-latest
+          #   rid: win-arm
           - os: windows-latest
             rid: win-arm64
           # osx
@@ -46,7 +47,7 @@ jobs:
       - name: Publish Desktop
         run: |
           cd killport-desktop
-          dotnet publish -c Release -r ${{ matrix.rid }} -o publish
+          dotnet publish KillPort.csproj -c Release -r ${{ matrix.rid }} -o publish
 
       - name: Upload Desktop Artifact
         uses: actions/upload-artifact@v4
