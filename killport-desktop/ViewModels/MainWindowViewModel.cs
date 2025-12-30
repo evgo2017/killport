@@ -31,7 +31,8 @@ public partial class MainWindowViewModel : ViewModelBase
     } 
 
     [ObservableProperty]
-    private string _statusMessage;
+    // github workflows build-desktop 时 warning: Non-nullable field '_statusMessage' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the field as nullable.
+    private string _statusMessage = "";
 
     // Store state for dynamic localization
     private string _currentStatusKey = "ReadyStatus";
