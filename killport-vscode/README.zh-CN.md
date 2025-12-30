@@ -9,6 +9,8 @@ Kill Port 是一个便捷的 VS Code 扩展，旨在帮助开发者快速终止�
 
 ## 🚀 使用指南
 
+插件主页: [Kill Port - Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=evgo2017.killport-vscode)
+
 1.  打开 VS Code，进入扩展视图 (`Ctrl+Shift+X`).。搜索 "Kill Port"，点击 **安装**。
 1.  打开侧边栏: 点击 VS Code 活动栏**（图标边栏）中新增的 "Kill Port" 图标**。
 1.  查看端口: 在**输入框中选择或输入端口号**，下方会显示对应的进程信息。

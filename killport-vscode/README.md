@@ -9,6 +9,8 @@ Kill Port is a convenient VS Code extension designed to help developers quickly 
 
 ## 🚀 Usage Guide
 
+Marketplace page: [Kill Port - Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=evgo2017.killport-vscode)
+
 1.  Open VS Code, go to the Extensions view (`Ctrl+Shift+X`). Search for "Kill Port" and click **Install**.
 2.  Open Sidebar: Click the new "Kill Port" icon in the VS Code Activity Bar (icon sidebar).
 3.  Check Port: **Select or enter a port number in the input box**, and the corresponding process information will be displayed below.

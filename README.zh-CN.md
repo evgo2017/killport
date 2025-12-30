@@ -15,7 +15,7 @@ Kill Port 旨在帮助开发者快速终止占用特定端口的进程。提供�
 
 ## 🚀 VSCode 扩展使用指南
 
-具体查看 [killport-vscode](./killport-vscode/README.md)。
+具体查看 [killport-vscode](./killport-vscode/README.md) 和插件主页: [Kill Port - Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=evgo2017.killport-vscode)。
 
 ![VSCode Steps](https://raw.githubusercontent.com/evgo2017/killport/main/killport-vscode/resources/steps.png)
 

@@ -15,7 +15,7 @@ See [killport-desktop](./killport-desktop/README.md) for details.
 
 ## 🚀 VSCode Extension Guide
 
-See [killport-vscode](./killport-vscode/README.md) for details.
+See [killport-vscode](./killport-vscode/README.md) and [Kill Port - Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=evgo2017.killport-vscode) for details.
 
 ![VSCode Steps](https://raw.githubusercontent.com/evgo2017/killport/main/killport-vscode/resources/steps.png)
 
