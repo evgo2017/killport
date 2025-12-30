@@ -20,6 +20,8 @@ Kill Port 桌面端是一个独立的应用程序，都可以帮助您管理和�
 
 ![Desktop Steps](https://raw.githubusercontent.com/evgo2017/killport/main/killport-desktop/Assets/steps.png)
 
+> 只测试了 Windows 系统，其他版本若有问题请反馈。
+
 ## 下载地址
 
 下载地址1：[网盘地址](http://evgo2017.ysepan.com/)（项目密码：evgo2017）
@@ -31,3 +33,7 @@ Kill Port 桌面端是一个独立的应用程序，都可以帮助您管理和�
 1.  确保已安装 .NET SDK。
 2.  进入 `killport-desktop` 目录。
 3.  运行 `dotnet run` 启动应用。
+
+---
+
+如果遇到问题，请 [issues](https://github.com/evgo2017/killport/issues) 说明，或在 [evgo2017.com/about](https://evgo2017.com/about) 联系我。

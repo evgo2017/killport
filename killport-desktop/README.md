@@ -20,6 +20,8 @@ Kill Port Desktop is a standalone application that helps you manage and terminat
 
 ![Desktop Steps](https://raw.githubusercontent.com/evgo2017/killport/main/killport-desktop/Assets/steps.png)
 
+> Only tested on Windows, other versions may have issues. Please feedback.
+
 ## Download
 
 Download Address 1：[Cloud Storage](http://evgo2017.ysepan.com/)（Password：evgo2017）
@@ -31,3 +33,7 @@ Download Address 2：[Release](https://github.com/evgo2017/killport/releases)
 1.  Ensure .NET SDK is installed.
 2.  Navigate to the `killport-desktop` directory.
 3.  Run `dotnet run` to launch the application.
+
+---
+
+If you encounter issues, please file an [issue](https://github.com/evgo2017/killport/issues) or contact me at [evgo2017.com/about](https://evgo2017.com/about).
