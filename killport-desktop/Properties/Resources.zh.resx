@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AppTitle" xml:space="preserve">
-    <value>Kill Port - 跨平台端口关闭工具</value>
+    <value>Kill Port - 跨平台端口关闭工具 (evgo2017.com)</value>
   </data>
   <data name="SearchWatermark" xml:space="preserve">
     <value>输入端口号 (例如 8080)</value>
